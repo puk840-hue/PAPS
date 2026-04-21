@@ -1,0 +1,6 @@
+{
+  "name": "PAPS Plus - 학생 건강체력 관리",
+  "description": "PAPS 결과를 학년별로 분석하여 등급을 산출하고 맞춤형 운동 처방을 제공하는 앱입니다.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
