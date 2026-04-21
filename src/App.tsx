@@ -45,6 +45,8 @@ import { EXERCISE_PRESCRIPTIONS, EXERCISE_INFO } from './constants/papsData';
 interface UserProfile {
   name: string;
   password?: string;
+  gender?: Gender;
+  gradeLevel?: GradeLevel;
 }
 
 // --- Components ---
@@ -70,7 +72,7 @@ const NavItem = ({ icon, label, active, onClick }: any) => (
   </button>
 );
 
-const LoginView = ({ profile, onComplete }: { profile: UserProfile | null, onComplete: (p: UserProfile) => void }) => {
+const LoginView = ({ profile, onComplete }: { profile: UserProfile | null, onComplete: (p: { name: string, password?: string }) => void }) => {
   const [name, setName] = useState(profile?.name || '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -79,6 +81,11 @@ const LoginView = ({ profile, onComplete }: { profile: UserProfile | null, onCom
     e.preventDefault();
     if (!name) return setError('이름을 입력해주세요.');
     
+    // Require 4 digits for password if provided or if already set
+    if (password && !/^\d{4}$/.test(password)) {
+      return setError('비밀번호는 숫자 4자리여야 합니다.');
+    }
+
     if (profile && profile.password && profile.password !== password) {
       return setError('비밀번호가 일치하지 않습니다.');
     }
@@ -92,52 +99,129 @@ const LoginView = ({ profile, onComplete }: { profile: UserProfile | null, onCom
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-900 rounded-full -ml-32 -mb-32 opacity-30" />
       
       <motion.div 
-        initial={{ opacity: 0, y: 20 }} 
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.95 }} 
+        animate={{ opacity: 1, scale: 1 }}
         className="bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl relative z-10"
       >
-        <div className="flex flex-col items-center mb-8">
-           <div className="w-16 h-16 bg-indigo-600 rounded-3xl flex items-center justify-center shadow-xl shadow-indigo-100 mb-6">
-              <Activity className="text-white" size={32} />
+        <div className="flex flex-col items-center mb-10">
+           <div className="w-20 h-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-indigo-200 mb-6 group transition-transform hover:rotate-12">
+              <Activity className="text-white" size={36} />
            </div>
-           <h1 className="text-2xl font-black text-slate-900">PAPS Smart</h1>
-           <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Health Tracker Login</p>
+           <h1 className="text-3xl font-black text-slate-900 tracking-tight italic">PAPS Smart+</h1>
+           <p className="text-slate-400 text-xs font-black uppercase tracking-[0.3em] mt-2">Personal Health Gateway</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">사용자 이름</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+              <div className="w-1 h-1 bg-indigo-600 rounded-full" /> 이름
+            </label>
             <div className="relative">
                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
                <input 
                  value={name}
                  onChange={(e) => setName(e.target.value)}
-                 className="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 outline-none transition-all font-bold" 
+                 className="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-100 focus:ring-8 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all font-bold text-slate-800" 
                  placeholder="성함을 입력하세요"
                />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">비밀번호 (선택사항)</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+               <div className="w-1 h-1 bg-indigo-600 rounded-full" /> 비밀번호 (숫자 4자리)
+            </label>
             <div className="relative">
                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
                <input 
-                 type="password"
+                 type="text"
+                 inputMode="numeric"
+                 maxLength={4}
                  value={password}
-                 onChange={(e) => setPassword(e.target.value)}
-                 className="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 outline-none transition-all font-bold font-mono" 
-                 placeholder="데이터 보호를 위한 암호"
+                 onChange={(e) => setPassword(e.target.value.replace(/[^0-9]/g, ''))}
+                 className="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-100 focus:ring-8 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all font-black tracking-[1em] text-center" 
+                 placeholder="0000"
                />
             </div>
           </div>
 
-          {error && <div className="text-rose-500 text-xs font-bold text-center flex items-center justify-center gap-1"><AlertCircle size={14} /> {error}</div>}
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }} 
+              animate={{ opacity: 1, x: 0 }}
+              className="text-rose-500 text-[10px] font-black text-center flex items-center justify-center gap-1.5 py-2 bg-rose-50 rounded-xl border border-rose-100"
+            >
+              <AlertCircle size={14} /> {error}
+            </motion.div>
+          )}
 
-          <button className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black transition-all shadow-xl shadow-indigo-100 active:scale-95">
-            시작하기
+          <button className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[2rem] font-black transition-all shadow-xl shadow-indigo-100 active:scale-95 group flex items-center justify-center gap-2">
+            접속하기
+            <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
           </button>
         </form>
+      </motion.div>
+    </div>
+  );
+};
+
+const SetupView = ({ onComplete }: { onComplete: (p: { gender: Gender, gradeLevel: GradeLevel }) => void }) => {
+  const [gender, setGender] = useState<Gender>('male');
+  const [grade, setGrade] = useState<GradeLevel>('중1');
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }} 
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white w-full max-w-xl rounded-[3rem] p-10 shadow-2xl border border-slate-100"
+      >
+        <header className="mb-10 text-center">
+          <div className="w-12 h-1 bg-indigo-600 rounded-full mx-auto mb-6" />
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">기본 정보 설정</h2>
+          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-2">정확한 측정을 위해 학년과 성별을 선택해주세요.</p>
+        </header>
+
+        <div className="space-y-10">
+          <div>
+            <label className="block text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-4 text-center">성별 선택</label>
+            <div className="grid grid-cols-2 gap-4">
+              {(['male', 'female'] as const).map(g => (
+                <button 
+                  key={g}
+                  onClick={() => setGender(g)}
+                  className={`p-6 rounded-[2rem] border-2 transition-all flex flex-col items-center gap-3 ${gender === g ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-lg shadow-indigo-100' : 'border-slate-50 bg-slate-50 text-slate-300'}`}
+                >
+                  <User size={32} />
+                  <span className="font-black">{g === 'male' ? '남학생' : '여학생'}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-4 text-center">학년 선택</label>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+              {['초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'].map((g) => (
+                <button 
+                  key={g}
+                  onClick={() => setGrade(g as GradeLevel)}
+                  className={`p-3 rounded-xl border-2 transition-all text-sm font-black ${grade === g ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 text-slate-400 border-transparent hover:border-slate-200'}`}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button 
+            onClick={() => onComplete({ gender, gradeLevel: grade })}
+            className="w-full py-5 bg-slate-900 hover:bg-black text-white rounded-[2rem] font-black transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2"
+          >
+            설정 완료 및 시작
+            <ChevronRight size={18} />
+          </button>
+        </div>
       </motion.div>
     </div>
   );
@@ -165,16 +249,18 @@ export default function App() {
     localStorage.setItem('paps_records', JSON.stringify(newRecords));
   };
 
-  const handleProfileSet = (p: UserProfile) => {
-    setProfile(p);
-    localStorage.setItem('paps_profile', JSON.stringify(p));
-    setIsAuth(true);
+  const handleProfileSet = (p: Partial<UserProfile>) => {
+    const updated = { ...profile, ...p } as UserProfile;
+    setProfile(updated);
+    localStorage.setItem('paps_profile', JSON.stringify(updated));
+    if (updated.name && updated.gender && updated.gradeLevel) {
+      setIsAuth(true);
+    }
   };
 
   const addRecord = (record: PapsRecord) => {
     const newRecords = [record, ...records];
     saveRecords(newRecords);
-    setActiveTab('home');
   };
 
   const deleteRecord = (id: string) => {
@@ -194,7 +280,12 @@ export default function App() {
   };
 
   if (!profile || !isAuth) {
-    return <LoginView profile={profile} onComplete={handleProfileSet} />;
+    if (!profile || !profile.name || !isAuth) {
+      return <LoginView profile={profile} onComplete={handleProfileSet} />;
+    }
+    if (!profile.gender || !profile.gradeLevel) {
+      return <SetupView onComplete={handleProfileSet} />;
+    }
   }
 
   return (
@@ -210,7 +301,7 @@ export default function App() {
           )}
           {activeTab === 'form' && (
             <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <RecordForm onAdd={addRecord} />
+              <RecordForm onAdd={addRecord} profile={profile} onFinish={() => setActiveTab('home')} />
             </motion.div>
           )}
           {activeTab === 'history' && (
@@ -380,10 +471,10 @@ function Home({ records, onNewRecord, profileName }: { records: PapsRecord[], on
   );
 }
 
-function RecordForm({ onAdd }: { onAdd: (r: PapsRecord) => void }) {
+function RecordForm({ onAdd, profile, onFinish }: { onAdd: (r: PapsRecord) => void, profile: UserProfile | null, onFinish: () => void }) {
   const [step, setStep] = useState(0);
-  const [gender, setGender] = useState<Gender>('male');
-  const [grade, setGrade] = useState<GradeLevel>('중1');
+  const [gender, setGender] = useState<Gender>(profile?.gender || 'male');
+  const [grade, setGrade] = useState<GradeLevel>(profile?.gradeLevel || '중1');
   const [selectedItems, setSelectedItems] = useState<Record<PapsArea, PapsItem>>({
     '심폐지구력': '왕복오래달리기',
     '유연성': '앉아윗몸앞으로굽히기',
@@ -392,6 +483,7 @@ function RecordForm({ onAdd }: { onAdd: (r: PapsRecord) => void }) {
     '비만': 'BMI'
   });
   const [values, setValues] = useState<Record<string, string>>({});
+  const [latestRecord, setLatestRecord] = useState<PapsRecord | null>(null);
 
   const areas: PapsArea[] = ['심폐지구력', '유연성', '근력·근지구력', '순발력', '비만'];
   
@@ -409,57 +501,61 @@ function RecordForm({ onAdd }: { onAdd: (r: PapsRecord) => void }) {
 
     const newRecord: PapsRecord = {
       id: Date.now().toString(),
+      name: profile?.name,
       date: new Date().toISOString().split('T')[0],
       gender,
       gradeLevel: grade,
-      measurements,
+      measurements: measurements as Record<PapsArea, PapsMeasurement>,
       totalScore,
       overallGrade: getOverallGrade(totalScore)
     };
 
+    setLatestRecord(newRecord);
+    setStep(3); // Go to Result Step
     onAdd(newRecord);
   };
 
   const steps = [
     { title: '기본 정보', desc: '성별과 학년을 선택해주세요.' },
     { title: '종목 선택', desc: '각 영역별 측정 종목을 선택해주세요.' },
-    { title: '결과 입력', desc: '측정된 수치를 입력해주세요.' }
+    { title: '결과 입력', desc: '측정된 수치를 입력해주세요.' },
+    { title: '측정 리포트', desc: '나의 등급과 솔루션을 확인하세요.' }
   ];
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center gap-4 mb-4 overflow-x-auto pb-2 scrollbar-hide">
         {steps.map((s, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${step === i ? 'bg-blue-600 text-white' : step > i ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+          <div key={i} className="flex items-center gap-2 shrink-0">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${step === i ? 'bg-indigo-600 text-white shadow-lg' : step > i ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
               {i + 1}
             </div>
-            {i < steps.length - 1 && <div className={`w-8 h-1 rounded-full ${step > i ? 'bg-blue-100' : 'bg-gray-100'}`} />}
+            {i < steps.length - 1 && <div className={`w-6 h-1 rounded-full ${step > i ? 'bg-indigo-200' : 'bg-slate-100'}`} />}
           </div>
         ))}
       </div>
 
-      <header className="mb-10">
+      <header className="mb-8">
         <h2 className="text-3xl font-black text-slate-900 tracking-tight">{steps[step].title}</h2>
         <p className="text-slate-400 font-bold text-sm tracking-wide uppercase mt-1">{steps[step].desc}</p>
       </header>
 
-      <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm min-h-[460px]">
+      <div className={`${step === 3 ? 'bg-slate-50' : 'bg-white border border-slate-200 shadow-sm'} rounded-[2.5rem] p-8 md:p-10 min-h-[460px]`}>
         {step === 0 && (
           <div className="space-y-10">
             <div>
-              <label className="block text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-1 text-center sm:text-left">학생 성별</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 text-center sm:text-left">학생 성별</label>
               <div className="grid grid-cols-2 gap-6">
                 <button 
                   onClick={() => setGender('male')}
-                  className={`p-6 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-3 ${gender === 'male' ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-md shadow-indigo-50' : 'border-slate-100 bg-slate-50 text-slate-400'}`}
+                  className={`p-6 rounded-[2rem] border-2 transition-all flex flex-col items-center justify-center gap-3 ${gender === 'male' ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-md shadow-indigo-50/20' : 'border-slate-50 bg-slate-50 text-slate-300'}`}
                 >
                   <User size={32} /> 
                   <span className="font-black">남학생</span>
                 </button>
                 <button 
                   onClick={() => setGender('female')}
-                  className={`p-6 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-3 ${gender === 'female' ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-md shadow-indigo-50' : 'border-slate-100 bg-slate-50 text-slate-400'}`}
+                  className={`p-6 rounded-[2rem] border-2 transition-all flex flex-col items-center justify-center gap-3 ${gender === 'female' ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-md shadow-indigo-50/20' : 'border-slate-50 bg-slate-50 text-slate-300'}`}
                 >
                   <User size={32} />
                   <span className="font-black">여학생</span>
@@ -467,13 +563,13 @@ function RecordForm({ onAdd }: { onAdd: (r: PapsRecord) => void }) {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-1 text-center sm:text-left">학년 선택</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 text-center sm:text-left">학년 선택</label>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                 {['초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'].map((g) => (
                   <button 
                     key={g}
                     onClick={() => setGrade(g as GradeLevel)}
-                    className={`p-4 rounded-xl border-2 transition-all text-sm font-black ${grade === g ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100' : 'bg-slate-50 text-slate-500 border-transparent hover:border-slate-200'}`}
+                    className={`p-4 rounded-[1.5rem] border-2 transition-all text-sm font-black ${grade === g ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100' : 'bg-slate-50 text-slate-400 border-transparent hover:border-slate-200'}`}
                   >
                     {g}
                   </button>
@@ -485,34 +581,43 @@ function RecordForm({ onAdd }: { onAdd: (r: PapsRecord) => void }) {
 
         {step === 1 && (
           <div className="space-y-6">
-            <h3 className="text-slate-400 font-black text-[10px] uppercase tracking-widest mb-6">각 영역별 종목을 확정하세요</h3>
-            {areas.map((area, idx) => (
-              <div key={area} className="group">
-                <label className="block text-xs font-black text-indigo-600 uppercase tracking-widest mb-2 ml-1">0{idx + 1} {area}</label>
-                <select 
-                  value={selectedItems[area]}
-                  onChange={(e) => setSelectedItems({...selectedItems, [area]: e.target.value as PapsItem})}
-                  className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none text-sm font-black text-slate-700 appearance-none transition-all cursor-pointer hover:bg-slate-100"
-                >
-                  {getItemsByArea(area).map(item => (
-                    <option key={item} value={item}>{item}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
+            <h3 className="text-slate-400 font-black text-[10px] uppercase tracking-widest mb-6 border-b border-slate-100 pb-4">상세 종목 선택 (영역별 1개)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {areas.map((area, idx) => (
+                <div key={area} className="group p-6 bg-slate-50 rounded-[2rem] border border-slate-100/50 hover:bg-white hover:border-indigo-100 transition-all">
+                  <label className="block text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-3">#0{idx + 1} {area}</label>
+                  <div className="relative">
+                    <select 
+                      value={selectedItems[area]}
+                      onChange={(e) => setSelectedItems({...selectedItems, [area]: e.target.value as PapsItem})}
+                      className="w-full p-4 pr-12 rounded-xl bg-white border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none text-sm font-black text-slate-800 appearance-none transition-all cursor-pointer"
+                    >
+                      {getItemsByArea(area).map(item => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
+                    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-slate-400 pointer-events-none" size={18} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {step === 2 && (
-          <div className="space-y-8">
-            <h3 className="text-slate-400 font-black text-[10px] uppercase tracking-widest mb-6">실제 측정 결과값을 입력하세요</h3>
+          <div className="space-y-6 max-w-2xl mx-auto">
             {areas.map(area => {
               const item = selectedItems[area];
               return (
-                <div key={area} className="flex flex-col sm:flex-row sm:items-center gap-4 group bg-slate-50/50 p-5 rounded-3xl transition-colors hover:bg-slate-50 border border-slate-100/50">
-                  <div className="flex-1">
-                    <label className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-1 block">{area}</label>
-                    <div className="text-lg font-black text-slate-800">{item}</div>
+                <div key={area} className="flex flex-col sm:flex-row sm:items-center gap-6 group bg-slate-50/50 p-6 rounded-[2rem] transition-all hover:bg-white hover:shadow-xl hover:shadow-indigo-50/30 border border-slate-100">
+                  <div className="flex-1 flex items-center gap-5">
+                    <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg overflow-hidden shrink-0">
+                      {getAreaIcon(area, 24)}
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block leading-none mb-1.5">{area}</label>
+                      <div className="text-base font-black text-slate-900 tracking-tight">{item}</div>
+                    </div>
                   </div>
                   <div className="relative w-full sm:w-48">
                     <input 
@@ -521,31 +626,106 @@ function RecordForm({ onAdd }: { onAdd: (r: PapsRecord) => void }) {
                       value={values[item] || ''}
                       onChange={(e) => setValues({...values, [item]: e.target.value})}
                       placeholder="0.0"
-                      className="w-full pl-5 pr-14 py-4 rounded-2xl bg-white border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none text-xl font-mono font-black text-slate-900 shadow-sm"
+                      className="w-full pl-6 pr-16 py-4 rounded-[1.5rem] bg-white border border-slate-200 focus:ring-8 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none text-2xl font-mono font-black text-slate-900 shadow-sm"
                     />
-                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">{getUnit(item)}</span>
+                    <span className="absolute right-6 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400 uppercase">{getUnit(item)}</span>
                   </div>
                 </div>
               );
             })}
           </div>
         )}
+
+        {step === 3 && latestRecord && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-10">
+            <div className="flex flex-col md:flex-row gap-8 items-center bg-white p-10 rounded-[3rem] border border-slate-200 shadow-xl relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600 rounded-bl-[6rem] opacity-5 shrink-0" />
+               <div className="w-32 h-32 rounded-[2.5rem] bg-indigo-600 flex items-center justify-center text-white text-5xl font-black shadow-2xl shadow-indigo-200 ring-8 ring-indigo-50 relative z-10 shrink-0">
+                 {latestRecord.overallGrade}
+               </div>
+               <div className="text-center md:text-left relative z-10">
+                  <span className="text-indigo-600 text-xs font-black uppercase tracking-[0.3em]">Overall Status</span>
+                  <h3 className="text-4xl font-black text-slate-900 mt-2 tracking-tight">종합 {latestRecord.overallGrade}등급</h3>
+                  <p className="text-slate-400 font-bold mt-2 flex items-center justify-center md:justify-start gap-2">
+                    <TrendingUp size={16} /> 총점 {latestRecord.totalScore}점 / 100점
+                  </p>
+               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {areas.map(area => {
+                const m = latestRecord.measurements[area];
+                return (
+                  <div key={area} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                         <div className={`p-2 rounded-xl ${getGradeBg(m.grade)} text-white shadow-md`}>
+                            {getAreaIcon(area, 20)}
+                         </div>
+                         <div>
+                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{area}</p>
+                            <p className="font-black text-slate-900">{m.item}</p>
+                         </div>
+                      </div>
+                      <div className="text-right">
+                         <p className="text-2xl font-black text-slate-900 tracking-tighter">{m.grade}<span className="text-xs ml-0.5">급</span></p>
+                         <p className="text-[10px] font-black text-slate-300 mt-1 uppercase tracking-widest">{m.score} pts</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                       <div className="p-5 bg-slate-50 rounded-[1.5rem]">
+                          <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                             <Zap size={12} /> 운동 솔루션
+                          </p>
+                          <ul className="space-y-2">
+                            {getPrescription(area, m.grade).map((p, i) => (
+                              <li key={i} className="text-xs font-bold text-slate-600 flex items-start gap-2">
+                                <div className="w-1 h-1 bg-emerald-400 rounded-full mt-1.5 shrink-0" /> {p}
+                              </li>
+                            ))}
+                          </ul>
+                       </div>
+
+                       {m.item && EXERCISE_INFO[m.item as PapsItem] && (
+                         <div className="grid grid-cols-2 gap-3">
+                            <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100/30">
+                               <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-2 leading-none">Pro Tips</p>
+                               <p className="text-[10px] text-slate-600 font-bold leading-tight italic">{EXERCISE_INFO[m.item as PapsItem].tips[0]}</p>
+                            </div>
+                            <div className="p-4 bg-rose-50/50 rounded-2xl border border-rose-100/30">
+                               <p className="text-[8px] font-black text-rose-500 uppercase tracking-widest mb-2 leading-none">Watch Out</p>
+                               <p className="text-[10px] text-slate-600 font-bold leading-tight italic">{EXERCISE_INFO[m.item as PapsItem].mistakes[0]}</p>
+                            </div>
+                         </div>
+                       )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
       </div>
 
       <div className="flex gap-4">
-        {step > 0 && (
+        {step > 0 && step < 3 && (
           <button 
             onClick={() => setStep(step - 1)}
-            className="flex-1 p-5 rounded-2xl border-2 border-slate-100 font-black text-slate-400 hover:bg-slate-50 transition-all uppercase tracking-widest text-xs"
+            className="flex-1 p-5 rounded-[1.5rem] border-2 border-slate-200 font-black text-slate-400 hover:bg-slate-50 transition-all uppercase tracking-widest text-[10px]"
           >
             Go Back
           </button>
         )}
         <button 
-          onClick={() => step < 2 ? setStep(step + 1) : handleComplete()}
-          className="flex-[3] p-5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black transition-all active:scale-[0.98] shadow-xl shadow-indigo-100 uppercase tracking-widest text-xs"
+          onClick={() => {
+            if (step < 2) setStep(step + 1);
+            else if (step === 2) handleComplete();
+            else onFinish();
+          }}
+          className="flex-[3] p-5 rounded-[1.5rem] bg-indigo-600 hover:bg-indigo-700 text-white font-black transition-all active:scale-[0.98] shadow-2xl shadow-indigo-100 uppercase tracking-widest text-[10px]"
         >
-          {step < 2 ? 'Continue' : 'Complete Entry'}
+          {step < 2 ? 'Next Step' : step === 2 ? 'Generate Analysis' : 'Finish & Exit'}
         </button>
       </div>
     </motion.div>
@@ -560,24 +740,25 @@ function HistoryView({ records, onDelete }: { records: PapsRecord[], onDelete: (
     if (!reportRef.current) return;
     
     try {
+      await document.fonts.ready;
+      
       const canvas = await html2canvas(reportRef.current, {
         scale: 2,
         useCORS: true,
-        logging: false,
-        backgroundColor: '#f8fafc' // bg-slate-50
+        backgroundColor: '#ffffff'
       });
       
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`paps_report_${record.date}.pdf`);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`PAPS_Report_${record.name || '학생'}_${record.date}.pdf`);
     } catch (err) {
       console.error('PDF generation failed:', err);
-      alert('PDF 생성 중 오류가 발생했습니다.');
+      alert('PDF 생성 오류: 브라우저 환경에 따라 작동하지 않을 수 있습니다. 새 탭에서 열기 기능을 권장합니다.');
     }
   };
 
@@ -659,20 +840,34 @@ function HistoryView({ records, onDelete }: { records: PapsRecord[], onDelete: (
                   </button>
                 </div>
 
-                <div className="flex gap-6 items-center mb-10 bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-bl-[4rem] -mr-8 -mt-8" />
-                  <div className="w-16 h-16 bg-indigo-600 rounded-[1.5rem] flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-indigo-100 ring-4 ring-white relative z-10">
-                    {selectedRecord.overallGrade}
-                  </div>
-                  <div className="relative z-10">
-                    <p className="text-indigo-600 font-black text-lg uppercase tracking-tight">종합 등급 산출 완료</p>
-                    <div className="flex items-center gap-3 mt-1">
-                       <span className="text-slate-800 text-sm font-black tracking-tight">Total Score: {selectedRecord.totalScore} / 100</span>
-                       <div className="h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-indigo-600" style={{ width: `${selectedRecord.totalScore}%` }} />
-                       </div>
-                    </div>
-                  </div>
+                <div className="flex flex-col md:flex-row gap-6 mb-10">
+                   <div className="flex-1 flex gap-6 items-center bg-indigo-50/50 p-6 rounded-[2.5rem] border border-indigo-100/50 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-white rounded-bl-[4rem] opacity-50" />
+                      <div className="w-16 h-16 bg-indigo-600 rounded-[1.5rem] flex items-center justify-center text-white text-3xl font-black shadow-xl shrink-0 relative z-10">
+                        {selectedRecord.overallGrade}
+                      </div>
+                      <div className="relative z-10">
+                        <p className="text-indigo-700 font-black text-lg uppercase tracking-tight leading-none mb-1">상태 분석 완료</p>
+                        <div className="flex items-center gap-3 mt-2">
+                           <span className="text-slate-600 text-xs font-black tracking-widest uppercase">Total Score: {selectedRecord.totalScore}/100</span>
+                        </div>
+                      </div>
+                   </div>
+                   <div className="w-full md:w-64 h-48 bg-white rounded-[2.5rem] border border-slate-100 p-4 shrink-0 shadow-sm">
+                      <ResponsiveContainer width="100%" height="100%">
+                         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
+                           { subject: '심폐', A: selectedRecord.measurements['심폐지구력']?.grade || 5, fullMark: 5 },
+                           { subject: '유연', A: selectedRecord.measurements['유연성']?.grade || 5, fullMark: 5 },
+                           { subject: '근력', A: selectedRecord.measurements['근력·근지구력']?.grade || 5, fullMark: 5 },
+                           { subject: '순발', A: selectedRecord.measurements['순발력']?.grade || 5, fullMark: 5 },
+                           { subject: '비만', A: selectedRecord.measurements['비만']?.grade || 5, fullMark: 5 },
+                         ].map(d => ({ ...d, A: 6 - d.A }))}>
+                           <PolarGrid stroke="#f1f5f9" />
+                           <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 8, fontWeight: 900 }} />
+                           <Radar name="Balance" dataKey="A" stroke="#4f46e5" fill="#4f46e5" fillOpacity={0.5} />
+                         </RadarChart>
+                      </ResponsiveContainer>
+                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">

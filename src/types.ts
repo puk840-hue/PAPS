@@ -19,10 +19,11 @@ export interface PapsMeasurement {
 
 export interface PapsRecord {
   id: string;
+  name?: string;
   date: string;
   gender: Gender;
   gradeLevel: GradeLevel;
-  measurements: Partial<Record<PapsArea, PapsMeasurement>>;
+  measurements: Record<PapsArea, PapsMeasurement>;
   totalScore: number;
   overallGrade: number;
 }
